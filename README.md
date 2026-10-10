@@ -1,30 +1,24 @@
-Here’s an updated `README.md` for your **`pytorch-llm` project**. It documents your GPT architecture, project structure, installation, training, checkpointing, and text generation on macOS.
-
-Replace the existing contents of `README.md` in your project root with this version.
+Here’s an updated `pytorch-llm/README.md` with a new **PyInstaller section** covering installation, building standalone macOS applications, packaging the model for text generation, and troubleshooting.
 
 
 
-# PyTorch LLM — GPT from Scratch
+# PyTorch LLM
 
-A modular, GPT-style autoregressive language model built from scratch using Python and PyTorch.
-
-This project implements the core components of a Transformer-based language model, including token embeddings, positional embeddings, causal self-attention, feed-forward networks, Transformer blocks, training, checkpoint management, and autoregressive text generation.
-
-The project is designed as a learning experience for understanding how modern language models work internally.
+A small GPT-style language model implemented from scratch using PyTorch. This project demonstrates tokenization, embeddings, causal self-attention, transformer blocks, training, checkpointing, and autoregressive text generation.
 
 ## Features
 
-- **Character-level tokenizer** — converts text into numerical token IDs.
-- **Token and positional embeddings** — represents token identity and sequence position.
-- **Causal self-attention** — allows each token to attend to itself and preceding tokens.
-- **Feed-forward network** — transforms token representations using linear layers and GELU activation.
-- **Transformer blocks** — combines attention, normalization, feed-forward layers, and residual connections.
-- **GPT language model** — predicts the next token from previous tokens.
-- **Training pipeline** — trains the model using cross-entropy loss and the AdamW optimizer.
-- **Dataset preparation** — creates input sequences and next-token targets.
-- **Checkpoint management** — saves and restores model weights, optimizer state, configuration, and tokenizer vocabulary.
-- **Text generation** — generates text autoregressively from a prompt.
-- **Apple Silicon support** — uses PyTorch's MPS backend when available.
+- Character-level tokenization
+- Token and positional embeddings
+- Multi-head causal self-attention
+- Feed-forward neural networks
+- Transformer blocks with residual connections and layer normalization
+- GPT-style language model
+- Training with PyTorch and AdamW
+- Model checkpoint saving and loading
+- Autoregressive text generation
+- Unit tests
+- Optional packaging with PyInstaller
 
 ## Project Structure
 
@@ -36,15 +30,13 @@ pytorch-llm/
 ├── requirements.txt
 ├── README.md
 ├── .gitignore
-│
 ├── data/
+│   ├── .gitkeep
 │   ├── sample.txt
 │   └── processed/
-│
 ├── tokenizer/
 │   ├── __init__.py
 │   └── tokenizer.py
-│
 ├── model/
 │   ├── __init__.py
 │   ├── embeddings.py
@@ -52,15 +44,12 @@ pytorch-llm/
 │   ├── feedforward.py
 │   ├── transformer.py
 │   └── gpt.py
-│
 ├── training/
 │   ├── __init__.py
 │   ├── dataset.py
 │   ├── trainer.py
 │   └── checkpoint.py
-│
 ├── checkpoints/
-│
 └── tests/
     ├── test_tokenizer.py
     ├── test_attention.py
@@ -71,24 +60,20 @@ pytorch-llm/
 
 - Python 3.10 or newer
 - PyTorch
-- A macOS, Linux, or Windows environment
-- Training text in a plain-text file
+- pip
+- macOS, Linux, or Windows
 
-An Apple Silicon Mac can use the Metal Performance Shaders (MPS) backend if supported by the installed PyTorch version and hardware.
+On Apple Silicon Macs, PyTorch may use Apple's Metal Performance Shaders (MPS) backend when supported.
 
 ## Installation
 
-### 1. Navigate to the project directory
-
-Open Terminal and run:
+Clone or download the project, then open Terminal and navigate to the project directory:
 
 ```bash
-cd ~/pytorch-llm
+cd pytorch-llm
 ```
 
-If your project is located elsewhere, navigate to that directory instead.
-
-### 2. Create a virtual environment
+Create a virtual environment:
 
 ```bash
 python3 -m venv .venv
@@ -100,209 +85,81 @@ Activate it:
 source .venv/bin/activate
 ```
 
-### 3. Install dependencies
+Install the dependencies:
 
 ```bash
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Make sure `requirements.txt` includes PyTorch:
+If you intend to package the project as an executable, install PyInstaller too:
 
-```text
-torch
+```bash
+pip install pyinstaller
 ```
 
-## Configuration
+## Prepare Training Data
 
-The model configuration is defined in `config.py`.
-
-The default settings are:
-
-| Parameter | Default | Description |
-|---|---:|---|
-| `block_size` | 128 | Maximum context length |
-| `vocab_size` | 0 | Vocabulary size, set from the tokenizer |
-| `n_embd` | 128 | Embedding dimension |
-| `n_head` | 4 | Number of attention heads |
-| `n_layer` | 4 | Number of Transformer blocks |
-| `dropout` | 0.1 | Dropout probability |
-| `batch_size` | 32 | Training batch size |
-| `max_iters` | 3000 | Number of training iterations |
-| `learning_rate` | 0.0003 | AdamW learning rate |
-| `eval_interval` | 300 | Interval between evaluations |
-| `data_path` | `data/input.txt` | Path to training text |
-| `checkpoint_path` | `checkpoints/model.pt` | Final checkpoint path |
-
-You can modify these values to experiment with different model sizes and training configurations.
-
-**Note:** The vocabulary size must be set after initializing the tokenizer and before constructing the model.
-
-## Preparing Training Data
-
-Create a text file in the `data/` directory.
-
-For example:
+Place your training text in:
 
 ```text
 data/sample.txt
 ```
 
-You can use the sample text included with this project to test the training pipeline.
+You can use your own plain-text corpus. The character-level tokenizer builds its vocabulary from the training text, so the vocabulary determines which characters the model can process.
 
-To use this file, update `data_path` in `config.py`:
+Open `config.py` and set the data path:
 
 ```python
 data_path: str = "data/sample.txt"
 ```
 
-The current tokenizer is character-based. It learns a vocabulary of individual characters rather than complete words or subword tokens.
+The default configuration uses a context length of 128 tokens and a batch size of 32. Your training corpus must be sufficiently large for the configured context length, training/validation split, and batch size.
 
-For meaningful language generation, use a substantially larger and more diverse text dataset than the small sample file.
+For a small demonstration corpus, consider temporarily reducing these settings:
 
-Only train on text you have permission to use.
-
-## Model Architecture
-
-The model follows a decoder-only Transformer architecture inspired by GPT.
-
-```text
-Input Text
-    |
-    v
-Character Tokenizer
-    |
-    v
-Token IDs
-    |
-    v
-Token + Positional Embeddings
-    |
-    v
-Transformer Block × 4
-    |
-    +-- Layer Normalization
-    +-- Causal Self-Attention
-    +-- Residual Connection
-    +-- Layer Normalization
-    +-- Feed-Forward Network
-    +-- Residual Connection
-    |
-    v
-Final Layer Normalization
-    |
-    v
-Language Model Head
-    |
-    v
-Next-Token Logits
+```python
+block_size: int = 32
+batch_size: int = 8
+n_embd: int = 64
+n_head: int = 4
+n_layer: int = 2
 ```
 
-### Tokenizer
+The context length, embedding size, and number of attention heads must be configured consistently.
 
-`tokenizer/tokenizer.py`
+## Train the Model
 
-Converts text into integer token IDs and converts generated token IDs back into text.
-
-### Embeddings
-
-`model/embeddings.py`
-
-Combines token embeddings and learned positional embeddings.
-
-### Causal Self-Attention
-
-`model/attention.py`
-
-Computes multi-head self-attention while preventing tokens from accessing future positions.
-
-### Feed-Forward Network
-
-`model/feedforward.py`
-
-Applies linear transformations and a GELU activation to each token representation.
-
-### Transformer Block
-
-`model/transformer.py`
-
-Combines causal self-attention and the feed-forward network using pre-layer normalization and residual connections.
-
-### GPT Language Model
-
-`model/gpt.py`
-
-Stacks the Transformer blocks and projects the final hidden representations into vocabulary logits.
-
-During training, these logits are used to calculate cross-entropy loss. During generation, the model samples the next token from the predicted probability distribution.
-
-## Training
-
-Run the training script from the project root:
+From the project root, run:
 
 ```bash
 python train.py
 ```
 
-The training pipeline:
+The training process:
 
-1. Loads the training text.
-2. Builds the character vocabulary.
+1. Reads the training text.
+2. Builds a character-level vocabulary.
 3. Encodes the text into token IDs.
-4. Splits the tokens into training and validation sets.
-5. Creates batches of input sequences and next-token targets.
-6. Initializes the GPT model.
-7. Optimizes the model using AdamW and cross-entropy loss.
-8. Periodically evaluates training and validation loss.
-9. Saves checkpoints.
+4. Creates training and validation datasets.
+5. Initializes the GPT model.
+6. Trains the model using AdamW.
+7. Evaluates training and validation loss.
+8. Saves model checkpoints.
 
-Training progress should display the current batch loss and the average losses measured on training and validation batches.
+Checkpoints are written to the `checkpoints/` directory.
 
-The exact results depend on the dataset, model configuration, and random initialization.
-
-### Understanding the training objective
-
-Given a sequence:
+Depending on your training implementation, the project may produce files such as:
 
 ```text
-Input:  [A, B, C, D]
-Target: [B, C, D, E]
+checkpoints/
+├── model.pt
+└── model_best.pt
 ```
 
-The model learns to predict the next token at every position.
+A small dataset is useful for testing the pipeline, but a model trained on a small corpus will generally produce limited or repetitive text.
 
-This training objective is called **autoregressive next-token prediction**.
-
-## Checkpoints
-
-Checkpoints are stored in the `checkpoints/` directory.
-
-The training pipeline saves:
-
-- Model parameters
-- Optimizer state
-- Model configuration
-- Training step
-- Loss value
-- Tokenizer vocabulary, when provided
-
-The default final checkpoint is:
-
-```text
-checkpoints/model.pt
-```
-
-The trainer also saves the checkpoint with the best validation loss:
-
-```text
-checkpoints/model_best.pt
-```
-
-These files allow you to restore trained model parameters without training the model again.
-
-**Security:** Only load checkpoint files from trusted sources.
-
-## Text Generation
+## Generate Text
 
 After training, run:
 
@@ -310,155 +167,279 @@ After training, run:
 python generate.py
 ```
 
-The generation script loads the saved checkpoint and tokenizer vocabulary, then prompts you for text.
+Enter a prompt when requested. The model will generate text based on the prompt and its learned vocabulary.
 
-Example interaction:
+Enter `quit` to exit the interactive session.
 
-```text
-GPT Text Generator
-Type a prompt and press Enter.
-Type 'quit' to exit.
+**Important:** The generation script must load the same tokenizer vocabulary and compatible model configuration used during training. A prompt containing characters outside the saved vocabulary cannot be encoded by the character-level tokenizer.
 
-You: Artificial intelligence
+## Run the Tests
 
-GPT: Artificial intelligence ...
-```
-
-The generated text depends on your model's training.
-
-To exit, type:
-
-```text
-quit
-```
-
-### How generation works
-
-1. The input prompt is converted into token IDs.
-2. The model predicts the next token.
-3. The prediction scores are converted into probabilities.
-4. A token is sampled from those probabilities.
-5. The selected token is appended to the sequence.
-6. The process repeats until the generation limit is reached.
-
-The current implementation generates one character at a time because it uses a character-level tokenizer.
-
-## Running Individual Modules
-
-From the project root, you can run the following commands to test individual components:
+Run the complete test suite from the project root:
 
 ```bash
-python -m model.embeddings
-python -m model.attention
-python -m model.feedforward
-python -m model.transformer
-python -m model.gpt
-python -m training.dataset
-python -m training.checkpoint
+python -m unittest discover -s tests -v
 ```
 
-These modules include basic smoke tests that check tensor shapes, model execution, or checkpoint functionality.
-
-If you add or modify components, you can also run your unit tests with:
+You can also run individual test modules:
 
 ```bash
-python -m pytest
+python -m unittest tests.test_tokenizer -v
+python -m unittest tests.test_attention -v
+python -m unittest tests.test_model -v
 ```
 
-This command requires `pytest` to be installed and the tests to be implemented.
+If Python cannot import a test module, ensure `tests/__init__.py` exists.
+
+## Configuration
+
+The main settings are in `config.py`.
+
+| Setting | Description |
+|---|---|
+| `block_size` | Maximum context length |
+| `vocab_size` | Number of unique tokens |
+| `n_embd` | Embedding dimension |
+| `n_head` | Number of attention heads |
+| `n_layer` | Number of transformer blocks |
+| `dropout` | Dropout probability |
+| `batch_size` | Training batch size |
+| `max_iters` | Number of training iterations |
+| `learning_rate` | Optimizer learning rate |
+| `eval_interval` | Frequency of training evaluation |
+| `data_path` | Path to the training text |
+| `checkpoint_path` | Path to the model checkpoint |
+
+## Package the Model with PyInstaller
+
+[PyInstaller](https://pyinstaller.org/) packages a Python application and its dependencies into a distributable application directory or executable.
+
+This project can use PyInstaller to package the text-generation script. The trained model checkpoint remains a separate file, allowing you to distribute or replace the model without rebuilding the application.
+
+### 1. Install PyInstaller
+
+Activate your project's virtual environment:
+
+```bash
+source .venv/bin/activate
+```
+
+Install PyInstaller:
+
+```bash
+python -m pip install pyinstaller
+```
+
+Verify the installation:
+
+```bash
+pyinstaller --version
+```
+
+### 2. Build the Text-Generation Application
+
+From the project root, run:
+
+```bash
+pyinstaller --clean --onedir --name pytorch-llm generate.py
+```
+
+PyInstaller creates the following directories and files:
+
+```text
+pytorch-llm/
+├── build/
+├── dist/
+│   └── pytorch-llm/
+│       ├── pytorch-llm
+│       └── ...
+└── pytorch-llm.spec
+```
+
+The `dist/pytorch-llm/` directory contains the packaged application and its dependencies.
+
+The `--onedir` option is a good starting point for PyTorch projects because it produces an application directory rather than one large self-extracting executable.
+
+### 3. Run the Packaged Application
+
+On macOS, run the generated executable from Terminal:
+
+```bash
+./dist/pytorch-llm/pytorch-llm
+```
+
+The application may need the model checkpoint at the location expected by `generate.py`.
+
+For example, if the script loads:
+
+```text
+checkpoints/model.pt
+```
+
+make sure the checkpoint is available at that relative path from the application's working directory, or modify the script to accept an explicit checkpoint path.
+
+A convenient distribution layout is:
+
+```text
+pytorch-llm-release/
+├── pytorch-llm/
+│   ├── pytorch-llm
+│   └── ...
+└── checkpoints/
+    └── model.pt
+```
+
+The precise layout depends on how `generate.py` resolves checkpoint paths. Relative paths are generally resolved from the process's current working directory, not automatically from the executable's directory.
+
+### 4. Include the Checkpoint in the Package
+
+For a fixed model, you can bundle the checkpoint with the application:
+
+```bash
+pyinstaller \
+  --clean \
+  --onedir \
+  --name pytorch-llm \
+  --add-data "checkpoints/model.pt:checkpoints" \
+  generate.py
+```
+
+On macOS, the `--add-data` separator is a colon (`:`).
+
+If the checkpoint is missing when you build the application, train the model first.
+
+**Important:** Including the checkpoint in the application does not automatically make your script locate it correctly. Your Python code must resolve the bundled file's path appropriately. If you want users to replace the model, keeping the checkpoint external is usually more convenient.
+
+PyTorch is a large dependency, so packaged applications may require substantial disk space.
+
+### 5. Build a Single-File Executable
+
+If you prefer a single executable, use:
+
+```bash
+pyinstaller \
+  --clean \
+  --onefile \
+  --name pytorch-llm \
+  generate.py
+```
+
+The resulting executable is located at:
+
+```text
+dist/pytorch-llm
+```
+
+Run it with:
+
+```bash
+./dist/pytorch-llm
+```
+
+Single-file packaging can increase startup time because bundled files may need to be extracted at launch. With PyTorch, `--onedir` is often easier to troubleshoot.
+
+### 6. Package the Training Script
+
+You can also package the training entry point:
+
+```bash
+pyinstaller \
+  --clean \
+  --onedir \
+  --name pytorch-llm-train \
+  train.py
+```
+
+The packaged training application still needs access to its training corpus. Make sure `data/sample.txt`, or whichever file is configured in `config.py`, is available at the path the script expects.
+
+For most development workflows, running `python train.py` directly is simpler. PyInstaller is particularly useful when you want to distribute a ready-to-run application to someone who does not have Python installed.
+
+### 7. Important macOS Notes
+
+- **Build on the target operating system.** PyInstaller is not a general cross-compiler. Build a macOS application on macOS.
+- **Match the processor architecture.** An application built in an Apple Silicon Python environment generally targets Apple Silicon. Building for Intel Macs may require a separate Intel-compatible Python environment and dependencies.
+- **Test on a clean environment.** Run the packaged application without relying on files or Python packages that exist only in your development environment.
+- **Expect a large package.** PyTorch and its native libraries can significantly increase application size.
+- **Check security restrictions.** Applications distributed to other Mac users may require code signing and notarization, depending on how they are distributed.
+- **Use a terminal during development.** It makes missing dependencies, invalid paths, and checkpoint-loading errors easier to diagnose.
 
 ## Troubleshooting
 
-### Training text cannot be found
+### Not enough training data
 
-Make sure the configured file exists and that you run the training command from the project root.
+If the dataset is too small, training or validation loaders may not contain enough sequences or complete batches.
 
-For example:
+Try adding more text or temporarily reducing `block_size` and `batch_size`.
 
-```text
-pytorch-llm/data/sample.txt
-```
+### Unknown character during generation
 
-Then set `data_path` to:
+The character-level tokenizer only recognizes characters included in the training vocabulary.
 
-```python
-data_path: str = "data/sample.txt"
-```
+Use a prompt composed of known characters, or retrain the model with a corpus containing the required characters.
 
 ### Checkpoint not found
 
-Train the model before running generation:
+Verify that the checkpoint exists and that `checkpoint_path` points to the correct file.
+
+For a packaged application, remember that the current working directory may differ from the project directory.
+
+### PyInstaller reports missing modules
+
+Try rebuilding with a clean build directory:
 
 ```bash
-python train.py
+pyinstaller --clean --onedir --name pytorch-llm generate.py
 ```
 
-Check that `config.py` and `generate.py` point to the same checkpoint path.
+For dependencies that PyInstaller cannot detect automatically, inspect its warnings and use the appropriate hidden-import or collection options. Avoid collecting every dependency indiscriminately unless necessary, since this can make the package much larger.
 
-### Prompt contains unknown characters
+### PyTorch or MPS is unavailable
 
-The character tokenizer only recognizes characters in its learned vocabulary. A prompt containing an unseen character may fail to encode.
+The packaged application can only use backends supported by the installed PyTorch build and the machine running it. Test CPU execution first if accelerator initialization fails.
 
-Try a prompt using characters that appear in the training text.
+## Learning Goals
 
-### Training is too slow
+This project is intended to help you understand:
 
-Try reducing the model size or batch size:
-
-```python
-n_embd: int = 64
-n_head: int = 4
-n_layer: int = 2
-batch_size: int = 16
-```
-
-Ensure that `n_embd` is divisible by `n_head`.
-
-### Generated text is repetitive or incoherent
-
-This is expected when training a small model on a small dataset. Improve the quantity and quality of training text, allow sufficient training, and evaluate the model's validation loss.
-
-A functioning training loop does not automatically imply that the model has learned useful language patterns.
+- How text becomes token IDs
+- How embeddings represent tokens and positions
+- How causal self-attention works
+- How transformer blocks combine attention and feed-forward layers
+- How autoregressive language models learn to predict tokens
+- How inference differs from training
+- How model checkpoints preserve trained weights and tokenizer mappings
+- How Python ML applications can be packaged for distribution
 
 ## Future Improvements
 
 Potential extensions include:
 
-- Subword tokenization with BPE
+- Byte-pair encoding (BPE) or another subword tokenizer
+- Key-value caching for faster autoregressive generation
 - Learning-rate scheduling
 - Mixed-precision training
 - Gradient accumulation
-- More robust checkpoint resumption
-- Temperature and top-k sampling
-- Top-p (nucleus) sampling
-- Training and generation metrics
-- Larger datasets and model configurations
-- Unit tests for all model components
-- Experiment tracking
+- Better evaluation metrics
+- A command-line interface for generation
+- A graphical user interface
+- Quantization for reduced memory use
+- Disaggregated prefill and decode serving
 
-## Learning Objectives
+## Disclaimer
 
-This project is intended to help you understand:
-
-- How tokenization maps text to numerical representations
-- How embeddings represent tokens and their positions
-- How causal attention models context
-- How Transformer blocks process token sequences
-- How gradient descent trains neural networks
-- How autoregressive generation produces text
-- How checkpoints preserve model and optimizer state
-
-## License
-
-Add a license file if you plan to distribute this project publicly. Until a license is specified, do not assume others have permission to redistribute or reuse the project.
+This is an educational implementation intended to demonstrate the basic components of a GPT-style language model. It is not a production-ready inference engine.
 ```
 
-### Apply the update
+### After updating the README
 
-1. Open `pytorch-llm/README.md` in your editor.
-2. Replace the old contents with the version above.
-3. Save the file.
+Save the content as `README.md` in your project root. Then, from Terminal, test the PyInstaller workflow:
 
-**One important detail:** The README assumes your `data_path` is set to `data/sample.txt`, as in your recent setup. It also documents `pytest` as an optional testing dependency and the module commands for the files we've implemented.
+```bash
+cd pytorch-llm
+source .venv/bin/activate
+pip install pyinstaller
+python train.py
+pyinstaller --clean --onedir --name pytorch-llm generate.py
+```
 
-Your project now has documentation covering its architecture and the workflow from preparing text to training and generating output.
+**One important detail:** PyInstaller packages your Python code and dependencies, but your generation script still needs to find the trained checkpoint and load the saved tokenizer vocabulary. The README documents both options: keeping the checkpoint external or bundling it with the application.
