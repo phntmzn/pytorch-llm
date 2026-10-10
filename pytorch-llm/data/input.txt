@@ -1,0 +1,33 @@
+Artificial Intelligence and Language Models
+
+Artificial intelligence is a field of computer science that focuses on creating machines capable of performing tasks that normally require human intelligence.
+
+A language model is a computer program that learns patterns in text. It can use these patterns to predict the next character, word, or token in a sequence.
+
+Neural networks are the foundation of many modern artificial intelligence systems. They consist of interconnected mathematical operations that learn from examples.
+
+A transformer is a neural network architecture designed to process sequences of data. It uses a mechanism called attention to identify relationships between different parts of a sequence.
+
+Self-attention allows a model to examine earlier tokens and determine which ones are useful for predicting the next token.
+
+A GPT model is a generative pretrained transformer. It generates text one token at a time, using the tokens that came before it as context.
+
+During training, a language model receives a sequence of tokens and learns to predict the next token. The model compares its predictions with the correct answers and adjusts its parameters to reduce the prediction error.
+
+The training process uses a technique called backpropagation to calculate gradients. An optimizer uses these gradients to update the model’s parameters.
+
+PyTorch is a machine learning framework that provides tools for building and training neural networks. It supports automatic differentiation and can use different computing devices.
+
+On a Mac, PyTorch may use Apple’s Metal Performance Shaders backend to accelerate supported tensor operations on the GPU.
+
+A small language model can run on a personal computer. However, the quality of its output depends on its architecture, training data, and training process.
+
+The goal of this project is to build a GPT-style language model from scratch. The project includes a tokenizer, token embeddings, positional embeddings, attention layers, feed-forward networks, transformer blocks, and a training loop.
+
+Each component has a specific purpose. The tokenizer converts text into numerical token IDs. Embeddings represent tokens as vectors. Attention combines information from the context. Feed-forward layers transform those representations.
+
+The final layer produces scores for possible next tokens. During text generation, the model converts these scores into probabilities and selects a token.
+
+The selected token is appended to the existing sequence. The model then repeats the process to generate additional text.
+
+Learning how these components work together provides a practical introduction to deep learning and modern language models.
